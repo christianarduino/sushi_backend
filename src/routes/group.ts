@@ -2,7 +2,7 @@ import express, { response } from "express"
 import { InputGroup } from "../models/input/inputGroup"
 import { plainToClass } from "class-transformer"
 import { validateOrReject } from "class-validator"
-import GroupSchema, { GroupDoc } from "../models/schema/groupSchema"
+import GroupSchema, { GroupDoc, IGroupUser } from "../models/schema/groupSchema"
 import UserSchema from "../models/schema/userSchema"
 
 const router: express.Router = express.Router()
@@ -38,14 +38,16 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
     //save new group
     const savedGroup: GroupDoc = await newGroup.save()
 
-    const members: { userId?: string, groupId?: string, isAdmin: boolean }[] = []
+    const members: (IGroupUser)[] = []
 
     if (inputGroup.userIds.length > 0) {
 
-      members.push({
+      const newMember: IGroupUser = {
         isAdmin: true,
-        userId: req.params.userId,
-      })
+        userId: req.params.userId
+      }
+
+      members.push(newMember)
 
       loggedUser.groups.push({
         isAdmin: true,
@@ -56,10 +58,12 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 
 
       for (const id of inputGroup.userIds) {
-        members.push({
-          isAdmin: false,
-          userId: req.params.userId,
-        })
+        const newMember: IGroupUser = {
+          isAdmin: true,
+          userId: req.params.userId
+        }
+
+        members.push(newMember)
         const user = await UserSchema.findById(id)
 
         user?.groups.push({

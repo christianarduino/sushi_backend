@@ -1,4 +1,10 @@
-import { createSchema, Type, typedModel, ExtractDoc, ExtractProps } from 'ts-mongoose';
+import { createSchema, Type, typedModel, ExtractDoc,  } from 'ts-mongoose';
+
+export interface IGroupUser  {
+  isAdmin: boolean,
+  userId?: string,
+  groupId?: string,
+}
 
 const ProductSchema = createSchema({
   userId: Type.string(),
@@ -8,11 +14,11 @@ const ProductSchema = createSchema({
 const GroupSchema = createSchema({
   name: Type.string({ required: true }),
   description: Type.string({ required: true }),
-  
+
   users: Type.array({ required: true }).of({
+    isAdmin: Type.boolean({ required: true }),
     userId: Type.string(),
-    groupId: Type.string(),
-    isAdmin: Type.boolean({ required: true })
+    groupId: Type.string()
   }),
 
   products: Type.array({ required: true }).of(ProductSchema)

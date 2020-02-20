@@ -7,12 +7,11 @@ const UserSchema = createSchema({
   email: Type.string({ required: true }),
   password: Type.string({ required: true }),
   groups: Type.array({ required: true }).of({
+    isAdmin: Type.boolean({ required: true }),
     userId: Type.string(),
-    groupId: Type.string(),
-    isAdmin: Type.boolean({ required: true })
+    groupId: Type.string()
   })
 })
 
-export type UserDoc = ExtractDoc<typeof UserSchema>;
-export type UserProps = ExtractProps<typeof UserSchema>;
+export type UserDoc = ExtractDoc<typeof UserSchema>
 export default typedModel("User", UserSchema)
