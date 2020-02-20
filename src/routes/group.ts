@@ -1,4 +1,4 @@
-import express, { response } from "express"
+import express from "express"
 import { InputGroup } from "../models/input/inputGroup"
 import { plainToClass } from "class-transformer"
 import { validateOrReject } from "class-validator"
@@ -6,6 +6,31 @@ import GroupSchema, { GroupDoc, IGroupUser } from "../models/schema/groupSchema"
 import UserSchema from "../models/schema/userSchema"
 
 const router: express.Router = express.Router()
+
+//get one group
+router.get("/:groupId", async (req: express.Request, res: express.Response) => {
+  try {
+    const group = await GroupSchema.findById(req.params.groupId)
+    if (!group) {
+      return res.status(404).json({ error: true, message: "No group was found with this id" })
+    } else {
+      return res.json({ error: false, group })
+    }
+  } catch (e) {
+    return res.status(500).json({ error: true })
+  }
+})
+
+//get all groups
+router.get("/", async (req: express.Request, res: express.Response) => {
+  try {
+    const groups: (GroupDoc)[] = await GroupSchema.find()
+
+    res.json({ error: false, groups })
+  } catch (e) {
+    return res.status(500).json({ error: true, message: e })
+  }
+})
 
 //create new group
 router.post("/:userId", async (req: express.Request, res: express.Response) => {
@@ -26,8 +51,8 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
     if (group.length > 0) {
       return res.status(400).json({ error: true, message: "A group with this name already exists" })
     }
-  
-    //create new group
+
+    //new group
     const newGroup: GroupDoc = new GroupSchema({
       name: inputGroup.name,
       description: inputGroup.description || "Il sushi è come l'alcool: quando ti alzi dalla tavola dici che sarà l'ultima volta. Ma poi...",
@@ -80,43 +105,56 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 
     return res.json({ error: false, group: savedGroup })
 
-  } catch(e) {
-    return res.status(500).json({ error: true , message: e})
-  }
-})
-
-//get all groups
-router.get("/", async (req: express.Request, res: express.Response) => {
-  try {
-    const groups: (GroupDoc)[] = await GroupSchema.find()
-
-    res.json({ error: false, groups })
-  } catch(e) {
+  } catch (e) {
     return res.status(500).json({ error: true, message: e })
   }
 })
 
-//get one group
-router.get("/:groupId", async (req: express.Request, res: express.Response) => {
+//get group relative user
+router.get("/user/:userId", async (req: express.Request, res: express.Response) => {
+  try {
+    const id: string = req.params.userId
+    const user = await UserSchema.findById(id)
 
+    if (!user) return res.status(404).json({ error: true, message: "No user was found with this id" })
+
+    const admin = []
+    const member = []
+
+    for (const searchGroup of user.groups) {
+      const group = await GroupSchema.findById(searchGroup.groupId).select("_id name description")
+
+      if (group) {
+        searchGroup.isAdmin ? admin.push(group) : member.push(group)
+      }
+    }
+
+    res.json({ error: false, admin, member })
+
+  } catch (e) {
+    return res.status(500).json({ error: true })
+  }
 })
 
 //delete group
 router.delete("/:groupId", async (req: express.Request, res: express.Response) => {
   try {
     const group = await GroupSchema.findById(req.params.groupId)
-    if(!group) return res.status(404).json({ error: true, message: "No group was found with this id" })
+    if (!group) return res.status(404).json({ error: true, message: "No group was found with this id" })
 
-    for(const groupUser of group!.users) {
+    for (const groupUser of group.users) {
       const user = await UserSchema.findById(groupUser.userId)
-      user!.groups = user!.groups.filter((group) => group.groupId != groupUser.groupId)
-      await user!.save()
+
+      if(user) {
+        user.groups = user.groups.filter((group) => group.groupId = groupUser.groupId)
+        await user.save()
+      }
     }
 
     await GroupSchema.deleteOne(req.params.groupId)
     return res.json({ error: false, message: "The group has been successfully deleted" })
 
-  } catch(e) {
+  } catch (e) {
     return res.status(500).json({ error: true, message: e })
   }
 })

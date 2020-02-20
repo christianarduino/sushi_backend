@@ -1,8 +1,12 @@
 import axios from 'axios'
 import { assert } from 'chai'
+import * as mongoose from 'mongoose';
+import {Mockgoose} from 'mockgoose';
 //import sha256 from 'crypto-js/sha256';
 
-const url: string = "http://localhost:3000/user/"
+const url: string = "http://localhost:3000/user/login"
+const dbConnection: string = process.env.DB_CONNECT!
+let mockgoose: Mockgoose = new Mockgoose(mongoose);
 
 const mockLoginUser = {
   username: "christianarduino",
@@ -10,10 +14,11 @@ const mockLoginUser = {
 }
 
 describe("/login", () => {
+
   it("should return 400 if username isn't a string", async () => {
     try {
       await axios.post(
-        url + "login",
+        url,
         { ...mockLoginUser, username: 1 },
         { headers: { 'Content-Type': 'application/json' } }
       )
@@ -26,7 +31,7 @@ describe("/login", () => {
   it("should return 400 if password isn't a string", async () => {
     try {
       await axios.post(
-        url + "login",
+        url,
         { ...mockLoginUser, password: 1 },
         { headers: { 'Content-Type': 'application/json' } }
       )
