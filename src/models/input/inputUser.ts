@@ -1,6 +1,6 @@
 import { IsString, IsEmail, MinLength } from 'class-validator'
 
-export class RegisterUser {
+export class InputRegister {
 
   @IsString()
   name: string
@@ -20,7 +20,7 @@ export class RegisterUser {
   password: string
 }
 
-export class LoginUser {
+export class InputLogin {
   
   @IsString()
   username: string

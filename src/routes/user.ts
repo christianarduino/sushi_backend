@@ -1,15 +1,15 @@
 import express from "express"
 import { validateOrReject } from 'class-validator'
 import { plainToClass } from 'class-transformer'
-import { RegisterUser, LoginUser } from '../models/interface/userInterface'
-import UserSchema, { UserDoc } from '../models/entity/userEntity'
+import { InputRegister, InputLogin } from '../models/input/inputUser'
+import UserSchema, { UserDoc } from '../models/schema/userSchema'
 import sha256 from 'crypto-js/sha256';
 
 const router: express.Router = express.Router()
 
 //user login
 router.post("/login", async (req: express.Request, res: express.Response) => {
-  const loginUser: LoginUser = plainToClass(LoginUser, req.body)
+  const loginUser: InputLogin = plainToClass(InputLogin, req.body)
 
   try {
     await validateOrReject(loginUser)
@@ -31,7 +31,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
 
 //user register
 router.post("/register", async (req: express.Request, res: express.Response) => {
-  const registerUser: RegisterUser = plainToClass(RegisterUser, req.body)
+  const registerUser: InputRegister = plainToClass(InputRegister, req.body)
 
   //validation
   try {
@@ -79,8 +79,8 @@ router.post("/register", async (req: express.Request, res: express.Response) => 
 })
 
 //user delete
-router.delete("/delete/:id", async (req: express.Request, res: express.Response) => {
-  const user = await UserSchema.findOneAndDelete(req.params.id)
+router.delete("/delete/:userId", async (req: express.Request, res: express.Response) => {
+  const user = await UserSchema.findOneAndDelete(req.params.userId)
   if (user) {
     return res.json({ error: false, message: "The user has been successfully deleted" })
   } else {
@@ -89,11 +89,11 @@ router.delete("/delete/:id", async (req: express.Request, res: express.Response)
 })
 
 //user update
-router.put("/update/:id", async (req: express.Request, res: express.Response) => {
+router.put("/update/:userId", async (req: express.Request, res: express.Response) => {
 
   const updateUser = req.body
 
-  const id: string = req.params.id
+  const id: string = req.params.userId
   const oldUser = await UserSchema.findById(id)
   console.log(oldUser)
   if (!oldUser) {
@@ -125,7 +125,7 @@ router.put("/update/:id", async (req: express.Request, res: express.Response) =>
   }
 
   try {
-    const updatedUser = await UserSchema.updateOne({ _id: req.params.id }, { $set: newUser })
+    const updatedUser = await UserSchema.updateOne({ _id: req.params.userId }, { $set: newUser })
     return res.json({ error: false, updatedUser })
   } catch (e) {
     return res.status(500).json({ error: true, message: e })
