@@ -7,10 +7,6 @@ const UserSchema = createSchema({
   email: Type.string({required: true}),
   password: Type.string({required: true}),
 })
-UserSchema.pre("save", next => {
-  console.log("Pre function")
-  next()
-})
 
 export type UserDoc = ExtractDoc<typeof UserSchema>;
 export default typedModel("User", UserSchema)
