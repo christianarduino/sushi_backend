@@ -62,7 +62,8 @@ router.post("/register", async (req: express.Request, res: express.Response) => 
       surname: registerUser.surname,
       email: registerUser.email,
       username: registerUser.username,
-      password: registerUser.password
+      password: registerUser.password,
+      groups: []
     })
 
     //save new user on db
@@ -70,14 +71,7 @@ router.post("/register", async (req: express.Request, res: express.Response) => 
 
     return res.json({
       error: false,
-      user: {
-        _id: savedUser.id,
-        name: savedUser.name,
-        surname: savedUser.surname,
-        email: savedUser.email,
-        username: savedUser.username,
-        password: savedUser.password
-      }
+      savedUser
     })
   } catch (error) {
     return res.status(500).json({ error: true, message: error })
