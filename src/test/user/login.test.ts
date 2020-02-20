@@ -1,12 +1,9 @@
 import axios from 'axios'
 import { assert } from 'chai'
-import * as mongoose from 'mongoose';
-import {Mockgoose} from 'mockgoose';
+import dotenv from 'dotenv'
 //import sha256 from 'crypto-js/sha256';
-
+dotenv.config()
 const url: string = "http://localhost:3000/user/login"
-const dbConnection: string = process.env.DB_CONNECT!
-let mockgoose: Mockgoose = new Mockgoose(mongoose);
 
 const mockLoginUser = {
   username: "christianarduino",
@@ -14,7 +11,6 @@ const mockLoginUser = {
 }
 
 describe("/login", () => {
-
   it("should return 400 if username isn't a string", async () => {
     try {
       await axios.post(

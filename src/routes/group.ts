@@ -7,6 +7,17 @@ import UserSchema from "../models/schema/userSchema"
 
 const router: express.Router = express.Router()
 
+//get all groups
+router.get("/", async (req: express.Request, res: express.Response) => {
+  try {
+    const groups: (GroupDoc)[] = await GroupSchema.find()
+
+    res.json({ error: false, groups })
+  } catch (e) {
+    return res.status(500).json({ error: true, message: e })
+  }
+})
+
 //get one group
 router.get("/:groupId", async (req: express.Request, res: express.Response) => {
   try {
@@ -21,14 +32,29 @@ router.get("/:groupId", async (req: express.Request, res: express.Response) => {
   }
 })
 
-//get all groups
-router.get("/", async (req: express.Request, res: express.Response) => {
+//get group relative user
+router.get("/user/:userId", async (req: express.Request, res: express.Response) => {
   try {
-    const groups: (GroupDoc)[] = await GroupSchema.find()
+    const id: string = req.params.userId
+    const user = await UserSchema.findById(id)
 
-    res.json({ error: false, groups })
+    if (!user) return res.status(404).json({ error: true, message: "No user was found with this id" })
+
+    const admin = []
+    const member = []
+
+    for (const searchGroup of user.groups) {
+      const group = await GroupSchema.findById(searchGroup.groupId).select("_id name description")
+
+      if (group) {
+        searchGroup.isAdmin ? admin.push(group) : member.push(group)
+      }
+    }
+
+    res.json({ error: false, admin, member })
+
   } catch (e) {
-    return res.status(500).json({ error: true, message: e })
+    return res.status(500).json({ error: true })
   }
 })
 
@@ -107,32 +133,6 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 
   } catch (e) {
     return res.status(500).json({ error: true, message: e })
-  }
-})
-
-//get group relative user
-router.get("/user/:userId", async (req: express.Request, res: express.Response) => {
-  try {
-    const id: string = req.params.userId
-    const user = await UserSchema.findById(id)
-
-    if (!user) return res.status(404).json({ error: true, message: "No user was found with this id" })
-
-    const admin = []
-    const member = []
-
-    for (const searchGroup of user.groups) {
-      const group = await GroupSchema.findById(searchGroup.groupId).select("_id name description")
-
-      if (group) {
-        searchGroup.isAdmin ? admin.push(group) : member.push(group)
-      }
-    }
-
-    res.json({ error: false, admin, member })
-
-  } catch (e) {
-    return res.status(500).json({ error: true })
   }
 })
 

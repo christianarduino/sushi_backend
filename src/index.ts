@@ -11,10 +11,11 @@ dotenv.config()
 mongoose.connect(
   process.env.DB_CONNECT!,
   { useNewUrlParser: true, useUnifiedTopology: true },
-  err => {
-    err ? console.log(err.message) : console.log("Connected to MongoDB")
-  }
 )
+
+mongoose.connection.once('open', () => {
+  console.log('Connected to Database');
+});
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
