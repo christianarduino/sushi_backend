@@ -110,19 +110,21 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 
       for (const id of inputGroup.userIds) {
         const newMember: IGroupUser = {
-          isAdmin: true,
-          userId: req.params.userId
+          isAdmin: false,
+          userId: id
         }
 
         members.push(newMember)
         const user = await UserSchema.findById(id)
 
-        user?.groups.push({
-          isAdmin: true,
-          groupId: savedGroup.id
-        })
+        if (user) {
+          user.groups.push({
+            isAdmin: false,
+            groupId: savedGroup.id
+          })
 
-        await user?.save()
+          await user.save()
+        }
       }
     }
 
@@ -145,13 +147,13 @@ router.delete("/:groupId", async (req: express.Request, res: express.Response) =
     for (const groupUser of group.users) {
       const user = await UserSchema.findById(groupUser.userId)
 
-      if(user) {
+      if (user) {
         user.groups = user.groups.filter((group) => group.groupId = groupUser.groupId)
         await user.save()
       }
     }
 
-    await GroupSchema.deleteOne(req.params.groupId)
+    await GroupSchema.findOneAndDelete(req.params.groupId)
     return res.json({ error: false, message: "The group has been successfully deleted" })
 
   } catch (e) {
