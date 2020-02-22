@@ -1,10 +1,11 @@
 import express from "express"
 import { validateOrReject } from 'class-validator'
 import { plainToClass } from 'class-transformer'
-import { InputRegister, InputLogin } from '../models/input/inputUser'
+import { InputRegister, InputLogin } from '../models/input/user/inputUser'
 import UserSchema, { UserDoc } from '../models/schema/userSchema'
 import sha256 from 'crypto-js/sha256';
 
+// ROUTE: user/
 const router: express.Router = express.Router()
 
 //user login

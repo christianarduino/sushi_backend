@@ -1,10 +1,12 @@
 import express from "express"
-import { InputGroup } from "../models/input/inputGroup"
+import { InputGroup } from "../models/input/group/inputGroup"
+import { InputGroupModify } from "../models/input/group/inputGroupModify"
 import { plainToClass } from "class-transformer"
 import { validateOrReject } from "class-validator"
 import GroupSchema, { GroupDoc, IGroupUser } from "../models/schema/groupSchema"
 import UserSchema from "../models/schema/userSchema"
 
+// ROUTE: group/
 const router: express.Router = express.Router()
 
 //get all groups
@@ -27,32 +29,6 @@ router.get("/:groupId", async (req: express.Request, res: express.Response) => {
     } else {
       return res.json({ error: false, group })
     }
-  } catch (e) {
-    return res.status(500).json({ error: true })
-  }
-})
-
-//get group relative user
-router.get("/user/:userId", async (req: express.Request, res: express.Response) => {
-  try {
-    const id: string = req.params.userId
-    const user = await UserSchema.findById(id)
-
-    if (!user) return res.status(404).json({ error: true, message: "No user was found with this id" })
-
-    const admin = []
-    const member = []
-
-    for (const searchGroup of user.groups) {
-      const group = await GroupSchema.findById(searchGroup.groupId).select("_id name description")
-
-      if (group) {
-        searchGroup.isAdmin ? admin.push(group) : member.push(group)
-      }
-    }
-
-    res.json({ error: false, admin, member })
-
   } catch (e) {
     return res.status(500).json({ error: true })
   }
@@ -160,5 +136,32 @@ router.delete("/:groupId", async (req: express.Request, res: express.Response) =
     return res.status(500).json({ error: true, message: e })
   }
 })
+
+//modify group
+router.put("/:groupId", async (req: express.Request, res: express.Response) => {
+  const inputGroupModify: InputGroupModify = plainToClass(InputGroupModify, req.body)
+
+  try {
+     await validateOrReject(inputGroupModify)
+  } catch(err) {
+    return res.status(400).json({ error: false, message: err })
+  }
+
+  try {
+    const group = await GroupSchema.findById(req.params.groupId)
+    if(!group) return res.status(404).json({ error: true, message: "No group was found with this id" })
+
+    group.name = inputGroupModify.name || group.name
+    group.description = inputGroupModify.description || group.description
+
+    await group.save()
+    
+    return res.json({ error: false, message: "Group update succesfully" })
+  } catch(e) {
+
+  }
+})
+
+
 
 export default router
