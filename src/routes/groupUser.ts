@@ -24,6 +24,9 @@ const router: Router = express.Router()
 }) */
 
 router.get("/search", async (req: express.Request, res: express.Response) => {
+  if(!req.query.term || !req.query.userId)
+    return res.status(400).json({ error: true, message: "Bad request, no data found" })
+
   try {
     var regexp = new RegExp(req.query.term);
     const users = await UserSchema.find({ _id: { $ne: req.query.userId }, username: { $regex: regexp } }).select("_id name surname username");

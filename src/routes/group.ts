@@ -20,6 +20,22 @@ router.get("/", async (req: express.Request, res: express.Response) => {
   }
 })
 
+//search group
+router.get("/search", async (req: express.Request, res: express.Response) => {
+  console.log(req.query)
+  if(!req.query.term || !req.query.userId)
+    return res.status(400).json({ error: true, message: "Bad request, no data found" })
+
+  try {
+    var regexp = new RegExp(req.query.term);
+    const groups = await GroupSchema.find({ users: { $ne: { userId: req.query.userId } }, name: { $regex: regexp } }).select("_id name description");
+    return res.json({ error: false, groups })
+  } catch(e){
+    console.log(e);
+    return res.status(500).json({ error: true, message: "Internal error" })
+  }
+})
+
 //get one group
 router.get("/:groupId", async (req: express.Request, res: express.Response) => {
   try {
