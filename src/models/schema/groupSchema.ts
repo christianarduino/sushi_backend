@@ -22,11 +22,14 @@ const GroupSchema = createSchema({
     groupId: Type.string()
   }),
 
-  products: Type.array({ required: true }).of(ProductSchema)
+  products: Type.array({ required: true }).of(ProductSchema),
+
+  pending: Type.array({ required: true }).of(Type.string())
 
 })
 
 GroupSchema.plugin(normalize)
 
 export type GroupDoc = ExtractDoc<typeof GroupSchema>;
+
 export default typedModel("Group", GroupSchema)

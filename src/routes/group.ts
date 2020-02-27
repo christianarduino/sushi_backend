@@ -75,7 +75,8 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
       name: inputGroup.name,
       description: inputGroup.description || "Il sushi è come l'alcool: quando ti alzi dalla tavola dici che sarà l'ultima volta. Ma poi...",
       users: [],
-      products: []
+      products: [],
+      pending: [],
     })
 
     //save new group
