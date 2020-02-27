@@ -1,4 +1,5 @@
 import { createSchema, Type, typedModel, ExtractDoc,  } from 'ts-mongoose';
+import normalize from 'normalize-mongoose';
 
 export interface IGroupUser  {
   isAdmin: boolean,
@@ -24,6 +25,8 @@ const GroupSchema = createSchema({
   products: Type.array({ required: true }).of(ProductSchema)
 
 })
+
+GroupSchema.plugin(normalize)
 
 export type GroupDoc = ExtractDoc<typeof GroupSchema>;
 export default typedModel("Group", GroupSchema)

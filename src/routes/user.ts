@@ -17,7 +17,6 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
   } catch (e) {
     return res.status(400).json({ error: true, message: e })
   }
-
   const user: (UserDoc)[] = await UserSchema.find(
     { username: loginUser.username, password: sha256(loginUser.password).toString() }
   ).select("_id name username email username password")
@@ -25,7 +24,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
   if (user.length > 0) {
     return res.json({ error: false, user: user[0] })
   } else {
-    return res.status(404).json({ error: true, message: "No user with these credentials was found" })
+    return res.status(404).json({ error: true, message: "No user found or wrong credentials" })
   }
 
 })
@@ -45,16 +44,15 @@ router.post("/register", async (req: express.Request, res: express.Response) => 
 
     //hashing password
     registerUser.password = sha256(registerUser.password).toString()
-
     let user: (UserDoc)[] = await UserSchema.find({ email: registerUser.email })
     if (user.length > 0) {
-      return { error: true, message: "Someone with this email already exists" }
+      return res.status(400).json({ error: true, message: "Someone with this email already exists" })
     }
 
     //check if username exists
     user = await UserSchema.find({ username: registerUser.username })
     if (user.length > 0) {
-      return { error: true, message: "Someone with this username already exists" }
+      return res.status(400).json({ error: true, message: "Someone with this username already exists" })
     }
 
     //create new user
@@ -69,10 +67,17 @@ router.post("/register", async (req: express.Request, res: express.Response) => 
 
     //save new user on db
     const savedUser = await newUser.save()
-
+    const { name, surname, email, username, password } = savedUser
     return res.json({
       error: false,
-      savedUser
+      user: {
+        id: savedUser.id,
+        name,
+        surname,
+        email,
+        username,
+        password
+      }
     })
   } catch (error) {
     return res.status(500).json({ error: true, message: error })
@@ -96,7 +101,6 @@ router.put("/update/:userId", async (req: express.Request, res: express.Response
 
   const id: string = req.params.userId
   const oldUser = await UserSchema.findById(id)
-  console.log(oldUser)
   if (!oldUser) {
     return res.status(404).json({ error: true, message: "No user was found with this id" })
   }
@@ -109,7 +113,6 @@ router.put("/update/:userId", async (req: express.Request, res: express.Response
 
   //check if username exists
   user = await UserSchema.find({ username: updateUser.username, id: { $not: new RegExp(updateUser.id) } })
-  console.log(user)
   if (user.length > 0) {
     return res.status(400).json({ error: true, message: "Someone with this username already exists" })
   }

@@ -1,4 +1,5 @@
-import { createSchema, Type, typedModel, ExtractDoc, ExtractProps } from 'ts-mongoose';
+import { createSchema, Type, typedModel, ExtractDoc } from 'ts-mongoose';
+import normalize from 'normalize-mongoose';
 
 const UserSchema = createSchema({
   name: Type.string({ required: true }),
@@ -12,6 +13,8 @@ const UserSchema = createSchema({
     groupId: Type.string()
   })
 })
+
+UserSchema.plugin(normalize)
 
 export type UserDoc = ExtractDoc<typeof UserSchema>
 export default typedModel("User", UserSchema)

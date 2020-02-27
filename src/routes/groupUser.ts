@@ -9,8 +9,29 @@ import UserSchema from "../models/schema/userSchema"
 const router: Router = express.Router()
 
 //get all users who are not part of a group
-router.get("/", async (req: express.Request, res: express.Response) => {
+/* router.get("/not/:groupId", async (req: express.Request, res: express.Response) => {
+  if(!req.params.groupId) return res.status(400).json({ error: true, message: "No groupId params found" })
 
+  const group = await GroupSchema.findById(req.params.groupId)
+
+  if(!group) return res.status(404).json({ error: true, message: "No group with this id was found" })
+
+  const userIds: (string)[] = []
+  for(const user of group.users) {
+    userIds.push(user.userId!)
+  }
+
+}) */
+
+router.get("/search", async (req: express.Request, res: express.Response) => {
+  try {
+    var regexp = new RegExp(req.query.term);
+    const users = await UserSchema.find({ _id: { $ne: req.query.userId }, username: { $regex: regexp } }).select("_id name surname username");
+    return res.json({ error: false, users })
+  } catch (e) {
+    console.log(e)
+    return res.status(500).json({ error: true, message: "Internal error" })
+  }
 })
 
 //get group of a relative user
@@ -44,62 +65,62 @@ router.post("/:groupId", async (req: express.Request, res: express.Response) => 
   try {
     const group = await GroupSchema.findById(req.params.groupId)
 
-    if(!group) return res.status(404).json({ error: true, message: "The id sent doesn't match any group" })
+    if (!group) return res.status(404).json({ error: true, message: "The id sent doesn't match any group" })
 
     const inputGroupUser = plainToClass(InputGroupUser, req.body)
 
     try {
       await validateOrReject(inputGroupUser)
-    } catch(error) {
+    } catch (error) {
       return res.status(400).json({ error: true, message: error })
     }
 
-    for(const id of inputGroupUser.userIds) {
+    for (const id of inputGroupUser.userIds) {
       const user = await UserSchema.findById(id)
 
-      if(user) {
+      if (user) {
         const newUser: IGroupUser = {
           isAdmin: false,
         }
 
         //save to group document
-        group.users.push({...newUser, userId: id})
+        group.users.push({ ...newUser, userId: id })
 
         //save to the user documento
-        user.groups.push({...newUser, groupId: group.id})
+        user.groups.push({ ...newUser, groupId: group.id })
         await user.save()
       }
     }
     await group.save()
-    
+
     return res.json({ error: false, message: "The group was updated" })
-  } catch(e) {
+  } catch (e) {
     return res.status(500).json({ error: true })
   }
 })
 
 //delete users from a group
 router.delete("/:groupId", async (req: express.Request, res: express.Response) => {
-  if(!req.body.userIds || req.body.userIds.length == 0) 
-    return res.status(400).json({ error: true, message: "Bad request" })
+  if (!req.body.userIds || req.body.userIds.length == 0)
+    return res.status(400).json({ error: true, message: "No valid data" })
 
   const inputGroupUser: InputGroupUser = plainToClass(InputGroupUser, req.body)
 
   try {
     await validateOrReject(inputGroupUser)
-  } catch(err) {
+  } catch (err) {
     return res.status(400).json({ error: true, message: err })
   }
 
   try {
     const group = await GroupSchema.findById(req.params.groupId)
 
-    if(!group) return res.status(404).json({ error: true, message: "No group with this id was found" })
+    if (!group) return res.status(404).json({ error: true, message: "No group with this id was found" })
 
-    for(const id of inputGroupUser.userIds) {
+    for (const id of inputGroupUser.userIds) {
       const user = await UserSchema.findById(id)
 
-      if(user) {
+      if (user) {
         user.groups = user.groups.filter(data => data.groupId != group.id)
         await user.save()
         group.users = group.users.filter(groupUser => groupUser.userId != id)
@@ -110,7 +131,7 @@ router.delete("/:groupId", async (req: express.Request, res: express.Response) =
 
     let message: string
 
-    if(inputGroupUser.userIds.length == 1) {
+    if (inputGroupUser.userIds.length == 1) {
       message = "The user has been successfully deleted"
     } else {
       message = "Users have been successfully deleted"
@@ -118,7 +139,7 @@ router.delete("/:groupId", async (req: express.Request, res: express.Response) =
 
     return res.json({ error: true, message })
 
-  } catch(e) {
+  } catch (e) {
     return res.status(500).json({ error: true })
   }
 

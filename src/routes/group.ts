@@ -36,6 +36,7 @@ router.get("/:groupId", async (req: express.Request, res: express.Response) => {
 
 //create new group
 router.post("/:userId", async (req: express.Request, res: express.Response) => {
+  
   const loggedUser = await UserSchema.findById(req.params.userId)
   if (!loggedUser) return res.status(400).json({ error: true, message: "The id sent doesn't match any user" })
 
@@ -44,7 +45,6 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
   try {
     await validateOrReject(inputGroup)
   } catch (error) {
-    console.log("Errore")
     return res.status(400).json({ error: true, message: error.message })
   }
 
@@ -67,6 +67,13 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 
     const members: (IGroupUser)[] = []
 
+    loggedUser.groups.push({
+      isAdmin: true,
+      groupId: savedGroup.id
+    })
+
+    await loggedUser.save()
+
     if (inputGroup.userIds.length > 0) {
 
       const newMember: IGroupUser = {
@@ -75,13 +82,6 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
       }
 
       members.push(newMember)
-
-      loggedUser.groups.push({
-        isAdmin: true,
-        groupId: savedGroup.id
-      })
-
-      await loggedUser.save()
 
 
       for (const id of inputGroup.userIds) {
@@ -129,7 +129,7 @@ router.delete("/:groupId", async (req: express.Request, res: express.Response) =
       }
     }
 
-    await GroupSchema.findOneAndDelete(req.params.groupId)
+    await group.remove()
     return res.json({ error: false, message: "The group has been successfully deleted" })
 
   } catch (e) {
