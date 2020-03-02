@@ -24,7 +24,9 @@ const GroupSchema = createSchema({
 
   products: Type.array({ required: true }).of(ProductSchema),
 
-  pending: Type.array({ required: true }).of(Type.string())
+  pending: Type.array({ required: true }).of(Type.string()),
+
+  events: Type.array({ required: true }).of(Type.string())
 
 })
 

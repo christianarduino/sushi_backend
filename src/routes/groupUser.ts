@@ -24,7 +24,7 @@ const router: Router = express.Router()
 }) */
 
 router.get("/search", async (req: express.Request, res: express.Response) => {
-  if(!req.query.term || !req.query.userId)
+  if (!req.query.term || !req.query.userId)
     return res.status(400).json({ error: true, message: "Bad request, no data found" })
 
   try {
@@ -45,16 +45,18 @@ router.get("/:userId", async (req: express.Request, res: express.Response) => {
 
     if (!user) return res.status(404).json({ error: true, message: "No user was found with this id" })
 
-    const admin = []
-    const member = []
+    let admin = []
+    let member = []
 
-    for (const searchGroup of user.groups) {
-      const group = await GroupSchema.findById(searchGroup.groupId).select("_id name description")
+    const groupsAdmin = await GroupSchema.find({
+      users: { $elemMatch: { userId: user.id, isAdmin: true } }
+    })
+    admin = groupsAdmin
 
-      if (group) {
-        searchGroup.isAdmin ? admin.push(group) : member.push(group)
-      }
-    }
+    const groupsMember = await GroupSchema.find({
+      users: { $elemMatch: { userId: user.id, isAdmin: false } }
+    })
+    member = groupsMember
 
     res.json({ error: false, admin, member })
 
@@ -81,18 +83,12 @@ router.post("/:groupId", async (req: express.Request, res: express.Response) => 
     for (const id of inputGroupUser.userIds) {
       const user = await UserSchema.findById(id)
 
-      if (user) {
-        const newUser: IGroupUser = {
+      if (user)
+        group.users.push({
           isAdmin: false,
-        }
+          userId: id
+        })
 
-        //save to group document
-        group.users.push({ ...newUser, userId: id })
-
-        //save to the user documento
-        user.groups.push({ ...newUser, groupId: group.id })
-        await user.save()
-      }
     }
     await group.save()
 
@@ -120,15 +116,7 @@ router.delete("/:groupId", async (req: express.Request, res: express.Response) =
 
     if (!group) return res.status(404).json({ error: true, message: "No group with this id was found" })
 
-    for (const id of inputGroupUser.userIds) {
-      const user = await UserSchema.findById(id)
-
-      if (user) {
-        user.groups = user.groups.filter(data => data.groupId != group.id)
-        await user.save()
-        group.users = group.users.filter(groupUser => groupUser.userId != id)
-      }
-    }
+    group.users = group.users.filter(groupUser => !inputGroupUser.userIds.includes(groupUser.userId!))
 
     await group.save()
 

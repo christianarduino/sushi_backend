@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon",
-    "test": "mocha -r ts-node/register src/test/**/*.test.ts --timeout 10000",
-    "test2": "NODE_ENV=test mocha -r ts-node/register src/test/**/*.test.ts --timeout 10000"
+    "start": "NODE_ENV=production && nodemon",
+    "start-test": "NODE_ENV=test && node src/index.ts",
+    "test": "mocha -r ts-node/register src/test/**/*.test.ts --timeout 10000"
   },
   "keywords": [],
   "author": "",

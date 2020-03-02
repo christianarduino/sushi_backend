@@ -28,7 +28,13 @@ router.get("/search", async (req: express.Request, res: express.Response) => {
 
   try {
     var regexp = new RegExp(req.query.term);
-    const groups = await GroupSchema.find({ users: { $ne: { userId: req.query.userId } }, name: { $regex: regexp } }).select("_id name description");
+    const groups = await GroupSchema.find({ 
+      "users.userId": { $ne: req.query.userId }, 
+      pending: { $ne: req.query.userId },
+      name: { $regex: regexp }
+    }).select("_id name description");
+
+
     return res.json({ error: false, groups })
   } catch(e){
     console.log(e);
@@ -73,58 +79,22 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
     //new group
     const newGroup: GroupDoc = new GroupSchema({
       name: inputGroup.name,
-      description: inputGroup.description || "Il sushi è come l'alcool: quando ti alzi dalla tavola dici che sarà l'ultima volta. Ma poi...",
-      users: [],
+      description: inputGroup.description || "Il sushi è come l'alcool: quando ti alzi dalla tavola dici che sarà l'ultima volta, ma poi...",
+      users: [{ userId: loggedUser.id, isAdmin: true }],
       products: [],
       pending: [],
     })
 
-    //save new group
-    const savedGroup: GroupDoc = await newGroup.save()
-
-    const members: (IGroupUser)[] = []
-
-    loggedUser.groups.push({
-      isAdmin: true,
-      groupId: savedGroup.id
-    })
-
-    await loggedUser.save()
-
-    if (inputGroup.userIds.length > 0) {
-
-      const newMember: IGroupUser = {
-        isAdmin: true,
-        userId: req.params.userId
-      }
-
-      members.push(newMember)
-
-
-      for (const id of inputGroup.userIds) {
-        const newMember: IGroupUser = {
-          isAdmin: false,
-          userId: id
-        }
-
-        members.push(newMember)
-        const user = await UserSchema.findById(id)
-
-        if (user) {
-          user.groups.push({
-            isAdmin: false,
-            groupId: savedGroup.id
-          })
-
-          await user.save()
-        }
-      }
+    for(const userId of inputGroup.userIds) {
+      newGroup.users.push({
+        isAdmin: false,
+        userId: userId
+      })
     }
 
-    savedGroup.users = members
-    await savedGroup.save()
+    await newGroup.save()
 
-    return res.json({ error: false, group: savedGroup })
+    return res.json({ error: false, message: "Group saved correctly" })
 
   } catch (e) {
     return res.status(500).json({ error: true, message: e })
@@ -134,19 +104,9 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 //delete group
 router.delete("/:groupId", async (req: express.Request, res: express.Response) => {
   try {
-    const group = await GroupSchema.findById(req.params.groupId)
-    if (!group) return res.status(404).json({ error: true, message: "No group was found with this id" })
+    const group = await GroupSchema.deleteOne({_id: req.params.groupId})
+    if (group.deletedCount == 0) return res.status(404).json({ error: true, message: "No group was found with this id" })
 
-    for (const groupUser of group.users) {
-      const user = await UserSchema.findById(groupUser.userId)
-
-      if (user) {
-        user.groups = user.groups.filter((group) => group.groupId = groupUser.groupId)
-        await user.save()
-      }
-    }
-
-    await group.remove()
     return res.json({ error: false, message: "The group has been successfully deleted" })
 
   } catch (e) {

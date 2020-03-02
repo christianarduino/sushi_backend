@@ -17,14 +17,19 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
   } catch (e) {
     return res.status(400).json({ error: true, message: e })
   }
-  const user: (UserDoc)[] = await UserSchema.find(
-    { username: loginUser.username, password: sha256(loginUser.password).toString() }
-  ).select("_id name username email username password")
 
-  if (user.length > 0) {
-    return res.json({ error: false, user: user[0] })
-  } else {
-    return res.status(404).json({ error: true, message: "No user found or wrong credentials" })
+  try {
+    const user: (UserDoc)[] = await UserSchema.find(
+      { username: loginUser.username, password: sha256(loginUser.password).toString() }
+    ).select("_id name username email username password")
+  
+    if (user.length > 0) {
+      return res.json({ error: false, user: user[0] })
+    } else {
+      return res.status(404).json({ error: true, message: "No user found or wrong credentials" })
+    }
+  } catch(e) {
+    return res.status(500).json({ error: true, message: "Internal server error" })
   }
 
 })

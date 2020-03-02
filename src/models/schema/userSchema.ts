@@ -7,11 +7,6 @@ const UserSchema = createSchema({
   username: Type.string({ required: true }),
   email: Type.string({ required: true }),
   password: Type.string({ required: true }),
-  groups: Type.array({ required: true }).of({
-    isAdmin: Type.boolean({ required: true }),
-    userId: Type.string(),
-    groupId: Type.string()
-  })
 })
 
 UserSchema.plugin(normalize)
