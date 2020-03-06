@@ -5,6 +5,7 @@ import { plainToClass } from "class-transformer"
 import { validateOrReject } from "class-validator"
 import GroupSchema, { GroupDoc, IGroupUser } from "../models/schema/groupSchema"
 import UserSchema from "../models/schema/userSchema"
+import mongoose from "mongoose"
 
 // ROUTE: group/
 const router: express.Router = express.Router()
@@ -25,6 +26,7 @@ router.get("/search", async (req: express.Request, res: express.Response) => {
   console.log(req.query)
   if(!req.query.term || !req.query.userId)
     return res.status(400).json({ error: true, message: "Bad request, no data found" })
+
 
   try {
     var regexp = new RegExp(req.query.term);
@@ -88,7 +90,7 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
     for(const userId of inputGroup.userIds) {
       newGroup.users.push({
         isAdmin: false,
-        userId: userId
+        userId: mongoose.Types.ObjectId(userId)
       })
     }
 
@@ -103,6 +105,10 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 
 //delete group
 router.delete("/:groupId", async (req: express.Request, res: express.Response) => {
+  console.log(req.params)
+  if(!req.params.groupId)
+    return res.status(400).json({ error: true, message: "No group id founded" })
+
   try {
     const group = await GroupSchema.deleteOne({_id: req.params.groupId})
     if (group.deletedCount == 0) return res.status(404).json({ error: true, message: "No group was found with this id" })

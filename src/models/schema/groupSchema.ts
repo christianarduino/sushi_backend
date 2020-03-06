@@ -1,15 +1,16 @@
 import { createSchema, Type, typedModel, ExtractDoc,  } from 'ts-mongoose';
-import normalize from 'normalize-mongoose';
+import normalize from 'normalize-mongoose'
+import mongoose from 'mongoose'
 
 export interface IGroupUser  {
   isAdmin: boolean,
-  userId?: string,
-  groupId?: string,
+  userId?: mongoose.Types.ObjectId,
+  groupId?: mongoose.Types.ObjectId,
 }
 
 const ProductSchema = createSchema({
-  userId: Type.string(),
-  productIds: Type.array().of(Type.string())
+  userId: Type.objectId(),
+  productIds: Type.array().of(Type.objectId())
 })
 
 const GroupSchema = createSchema({
@@ -18,8 +19,8 @@ const GroupSchema = createSchema({
 
   users: Type.array({ required: true }).of({
     isAdmin: Type.boolean({ required: true }),
-    userId: Type.string(),
-    groupId: Type.string()
+    userId: Type.objectId(),
+    groupId: Type.objectId()
   }),
 
   products: Type.array({ required: true }).of(ProductSchema),
