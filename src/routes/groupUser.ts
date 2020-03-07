@@ -131,7 +131,10 @@ router.post("/delete/:groupId", async (req: express.Request, res: express.Respon
 
     if (!group) return res.status(404).json({ error: true, message: "No group with this id was found" })
 
-    const updatedGroup = await GroupSchema.updateOne({_id: group.id}, { $pull: { users: { userId: { $in: inputGroupUser.userIds } } } })
+    const updatedGroup = await GroupSchema.updateOne(
+      {_id: group.id}, 
+      { $pull: { users: { userId: { $in: inputGroupUser.userIds } } } }
+    )
     console.log(updatedGroup)
     let message: string
 
