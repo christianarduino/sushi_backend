@@ -24,21 +24,21 @@ router.get("/", async (req: express.Request, res: express.Response) => {
 //search group
 router.get("/search", async (req: express.Request, res: express.Response) => {
   console.log(req.query)
-  if(!req.query.term || !req.query.userId)
+  if (!req.query.term || !req.query.userId)
     return res.status(400).json({ error: true, message: "Bad request, no data found" })
 
 
   try {
     var regexp = new RegExp(req.query.term);
-    const groups = await GroupSchema.find({ 
-      "users.userId": { $ne: req.query.userId }, 
+    const groups = await GroupSchema.find({
+      "users.userId": { $ne: req.query.userId },
       pending: { $ne: req.query.userId },
       name: { $regex: regexp }
     }).select("_id name description");
 
 
     return res.json({ error: false, groups })
-  } catch(e){
+  } catch (e) {
     console.log(e);
     return res.status(500).json({ error: true, message: "Internal error" })
   }
@@ -60,7 +60,7 @@ router.get("/:groupId", async (req: express.Request, res: express.Response) => {
 
 //create new group
 router.post("/:userId", async (req: express.Request, res: express.Response) => {
-  
+
   const loggedUser = await UserSchema.findById(req.params.userId)
   if (!loggedUser) return res.status(400).json({ error: true, message: "The id sent doesn't match any user" })
 
@@ -87,10 +87,10 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
       pending: [],
     })
 
-    for(const userId of inputGroup.userIds) {
+    for (const userId of inputGroup.userIds) {
       newGroup.users.push({
         isAdmin: false,
-        userId: mongoose.Types.ObjectId(userId)
+        userId: userId
       })
     }
 
@@ -106,11 +106,11 @@ router.post("/:userId", async (req: express.Request, res: express.Response) => {
 //delete group
 router.delete("/:groupId", async (req: express.Request, res: express.Response) => {
   console.log(req.params)
-  if(!req.params.groupId)
+  if (!req.params.groupId)
     return res.status(400).json({ error: true, message: "No group id founded" })
 
   try {
-    const group = await GroupSchema.deleteOne({_id: req.params.groupId})
+    const group = await GroupSchema.deleteOne({ _id: req.params.groupId })
     if (group.deletedCount == 0) return res.status(404).json({ error: true, message: "No group was found with this id" })
 
     return res.json({ error: false, message: "The group has been successfully deleted" })
@@ -125,22 +125,22 @@ router.put("/:groupId", async (req: express.Request, res: express.Response) => {
   const inputGroupModify: InputGroupModify = plainToClass(InputGroupModify, req.body)
 
   try {
-     await validateOrReject(inputGroupModify)
-  } catch(err) {
+    await validateOrReject(inputGroupModify)
+  } catch (err) {
     return res.status(400).json({ error: false, message: err })
   }
 
   try {
     const group = await GroupSchema.findById(req.params.groupId)
-    if(!group) return res.status(404).json({ error: true, message: "No group was found with this id" })
+    if (!group) return res.status(404).json({ error: true, message: "No group was found with this id" })
 
     group.name = inputGroupModify.name || group.name
     group.description = inputGroupModify.description || group.description
 
     await group.save()
-    
+
     return res.json({ error: false, message: "Group update succesfully" })
-  } catch(e) {
+  } catch (e) {
 
   }
 })

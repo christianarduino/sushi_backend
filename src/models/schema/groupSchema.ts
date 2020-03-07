@@ -4,13 +4,13 @@ import mongoose from 'mongoose'
 
 export interface IGroupUser  {
   isAdmin: boolean,
-  userId?: mongoose.Types.ObjectId,
-  groupId?: mongoose.Types.ObjectId,
+  userId?: string,
+  groupId?: string,
 }
 
 const ProductSchema = createSchema({
-  userId: Type.objectId(),
-  productIds: Type.array().of(Type.objectId())
+  userId: Type.string(),
+  productIds: Type.array().of(Type.string())
 })
 
 const GroupSchema = createSchema({
@@ -19,8 +19,8 @@ const GroupSchema = createSchema({
 
   users: Type.array({ required: true }).of({
     isAdmin: Type.boolean({ required: true }),
-    userId: Type.objectId(),
-    groupId: Type.objectId()
+    userId: Type.string(),
+    groupId: Type.string()
   }),
 
   products: Type.array({ required: true }).of(ProductSchema),

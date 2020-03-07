@@ -8,13 +8,11 @@ const router = express.Router()
 router.post("/", async (req: express.Request, res: express.Response) => {
   const inputEvent: InputEvent = plainToClass(InputEvent, req.body)
 
-try {
-  await validateOrReject(inputEvent)
-} catch(e) {
-  return res.status(404).json({ error: false, message: "No valid input" })
-}
-
-
+  try {
+    await validateOrReject(inputEvent)
+  } catch (e) {
+    return res.status(404).json({ error: false, message: "No valid input" })
+  }
 
 })
 
